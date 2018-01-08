@@ -1,0 +1,52 @@
+import java.util.Properties;
+import java.util.Random;
+import java.util.concurrent.ExecutionException;
+
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.serialization.StringSerializer;
+
+public class KafkaProd {
+
+	public KafkaProd() {
+		
+	}
+
+
+	public static void main(String[] args) throws InterruptedException {
+		Random rnd = new Random();
+		
+		Properties props = new Properties();
+		props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,"sandbox-hdp.hortonworks.com:6667");
+		//props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,"localhost:21000");
+		props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,StringSerializer.class.getName());
+		props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,StringSerializer.class.getName());
+
+		KafkaProducer<String,String> producer = new KafkaProducer<String,String>(props);
+		
+		boolean sync = true;
+		String topic="sensors";
+		String key = "";
+		int index = 1;
+		if (sync) {
+			try {
+				while (true) {
+					key = ""+rnd.nextInt(255);
+					System.out.println(index+": "+key);
+					ProducerRecord<String,String> producerRecord = new ProducerRecord<String,String>(topic, key);
+					producer.send(producerRecord).get();
+					index++;
+					Thread.sleep(1000);
+				}
+				//System.out.println("Sync Key:" + key);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			} catch (ExecutionException e) {
+				e.printStackTrace();
+			}
+		}
+		producer.close();		
+	}
+
+}
